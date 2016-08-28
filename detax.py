@@ -1,4 +1,8 @@
+# coding: utf8
+from datetime import date
 from math import floor
+
+import click
 
 
 class TaxData(object):
@@ -49,11 +53,21 @@ class TaxData(object):
         return taxes
 
 
-if __name__ == '__main__':
-    d = TaxData(2016)
-    d.income = 25000
+@click.command()
+@click.argument('income', type=float)
+@click.option('--year', '-y', type=int, help='Tax year')
+def cli(income, year):
+    if year is None:
+        year = date.today().year
+
+    d = TaxData(year)
+    d.income = income
 
     tax = d.calc_tax()
 
     print(tax)
     print('Total: {:.2f} EUR'.format(sum(e[0] for e in tax)))
+
+
+if __name__ == '__main__':
+    cli()
