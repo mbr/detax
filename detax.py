@@ -12,6 +12,10 @@ class TaxData(object):
         self.children = []
         self.tax_class = 1
 
+    @property
+    def num_children(self):
+        return len(self.children)
+
     def calc_tax(self):
         if self.children:
             raise NotImplementedError
@@ -52,6 +56,12 @@ class TaxData(object):
 
         return taxes
 
+    def __str__(self):
+        return ('Tax year: {s.year}\n'
+                'Income: {s.income} €\n'
+                '# children: {s.num_children}\n'
+                'Tax class: {s.tax_class}'.format(s=self))
+
 
 @click.command()
 @click.argument('income', type=float)
@@ -63,10 +73,17 @@ def cli(income, year):
     d = TaxData(year)
     d.income = income
 
+    click.echo(d)
+    click.echo()
+
     tax = d.calc_tax()
 
-    print(tax)
-    print('Total: {:.2f} EUR'.format(sum(e[0] for e in tax)))
+    tpl = '{:>11.2f} €    {}'
+
+    for amount, title in tax:
+        click.echo(tpl.format(amount, title))
+    click.echo('-------------')
+    click.echo(tpl.format(sum(e[0] for e in tax), 'Gesamt'))
 
 
 if __name__ == '__main__':
