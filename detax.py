@@ -50,7 +50,10 @@ class TaxData(object):
             if taxes[0][0] > 972:
                 # Solidaritätszuschlag
                 soli = round(taxes[0][0] * 0.055, 2)
-                taxes.append((soli, 'Solidaritätszuschlag'))
+
+                # 20% Differenz Freigrenze zu Bemessungsgrundlage (= ESt)
+                sdiff = round((taxes[0][0] - 972) * 0.20, 2)
+                taxes.append((min(soli, sdiff), 'Solidaritätszuschlag'))
         else:
             raise NotImplementedError
 
