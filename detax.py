@@ -12,10 +12,31 @@ class TaxData(object):
         self.income = 0
         self.children = []
         self.tax_class = 1
+        self.state = 'BW'
+        self.church_tax = False
 
     @property
     def num_children(self):
         return len(self.children)
+
+    @property
+    def church_tax_rate(self):
+        if self.state in ('BW', 'BY'):
+            return 0.08
+        else:
+            return 0.09
+
+    @property
+    def church_tax_cap(self):
+        if self.state != 'BW':
+            raise NotImplementedError
+
+        if self.church_tax == 'rk':
+            return 0.035
+        elif self.church_tax == 'ev':
+            return 0.025
+
+        return 0
 
     def calc_tax(self):
         if self.children:
@@ -58,24 +79,46 @@ class TaxData(object):
         else:
             raise NotImplementedError
 
+        if self.church_tax:
+            church_tax_real = round(taxes[0][0] * self.church_tax_rate, 2)
+            taxes.append((church_tax_real, "Kirchensteuer"))
+
         return taxes
 
     def __str__(self):
-        return ('Tax year: {s.year}\n'
-                'Income: {s.income} €\n'
-                '# children: {s.num_children}\n'
-                'Tax class: {s.tax_class}'.format(s=self))
+        if self.church_tax:
+            longname = ('katholisch' if self.church_tax == 'rk'
+                        else 'evangelisch')
+            ctax = '{}, {:>2.02f} %'.format(
+                longname, self.church_tax_rate * 100)
+        else:
+            ctax = 'no'
+
+        if self.church_tax_cap:
+            ctax += ', capped at {:.02f} % total income'.format(
+                self.church_tax_cap * 100)
+
+        return ('Steuerjahr: {s.year}\n'
+                'Bundesland: {s.state}\n'
+                'Einkommen: {s.income} €\n'
+                'Anz. Kinder: {s.num_children}\n'
+                'Steuerklasse: {s.tax_class}\n'
+                'Kirchensteuer: {}'.format(ctax, s=self))
 
 
 @click.command()
 @click.argument('income', type=float)
 @click.option('--year', '-y', type=int, help='Tax year')
-def cli(income, year):
+@click.option('-c', '--church-tax', type=click.Choice(['rk', 'ev']))
+@click.option('-s', '--state', default='BW')
+def cli(income, year, church_tax, state):
     if year is None:
         year = date.today().year
 
     d = TaxData(year)
     d.income = income
+    d.church_tax = church_tax
+    d.state = state
 
     click.echo(d)
     click.echo()
