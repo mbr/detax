@@ -1,4 +1,5 @@
-# coding: utf8
+#!/usr/bin/python3
+
 from datetime import date
 from math import floor
 
