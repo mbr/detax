@@ -111,7 +111,9 @@ class TaxData(object):
 @click.option('--year', '-y', type=int, help='Tax year')
 @click.option('-c', '--church-tax', type=click.Choice(['rk', 'ev']))
 @click.option('-s', '--state', default='BW')
-def cli(income, year, church_tax, state):
+@click.option('-p/-P', '--perc/--no-perc', default=True,
+              help='Show total tax percentage')
+def cli(income, year, church_tax, state, perc):
     if year is None:
         year = date.today().year
 
@@ -130,7 +132,12 @@ def cli(income, year, church_tax, state):
     for amount, title in tax:
         click.echo(tpl.format(amount, title))
     click.echo('-------------')
-    click.echo(tpl.format(sum(e[0] for e in tax), 'Gesamt'))
+
+    total = sum(e[0] for e in tax)
+    click.echo(tpl.format(total, 'Gesamt'))
+
+    if perc:
+        click.echo('Tax percentage: {:.1f}%'.format(total * 100.0/income))
 
 
 if __name__ == '__main__':
